@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	github.com/go-chi/chi/v5 v5.2.1
-	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
+	github.com/lib/pq v1.10.9
 	github.com/rs/cors v1.11.1
 	github.com/theMitocondria/slimuuid v0.0.0-20250219080423-0862f55cc045
 )

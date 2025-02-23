@@ -1,8 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"encoding/csv"
 	"fmt"
+	"image"
+	_ "image/gif"
+	"image/jpeg"
+	_ "image/jpeg"
+	"image/png"
+	_ "image/png"
 	"io"
 	"log"
 	"net/http"
@@ -11,7 +18,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/CrossStack-Q/Go-Assignment/internals"
+	"github.com/CrossStack-Q/Go-Assignment/internals/store"
 	"github.com/theMitocondria/slimuuid"
 )
 
@@ -70,7 +77,6 @@ func validateCSV(file io.Reader) error {
 func (app *application) uploadCsvHandler(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
 
-	// today := time.Now().Format("2006-01-02")
 	inputDir := "csv/input"
 	outputDir := "csv/output"
 
@@ -123,11 +129,151 @@ func (app *application) uploadCsvHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	err = app.store.CompressImages.CSVUpload(uid, inputFilePath, outputFilePath)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, `{"error": "Failed to save upload metadata"}`, http.StatusInternalServerError)
+		return
+	}
+
 	log.Printf("CSV uploaded successfully: %s", inputFilePath)
 
-	go internals.ProcessCSV(inputFilePath, outputFilePath, uid)
+	go ProcessCSV(&app.store, inputFilePath, outputFilePath, uid)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`{"message": "File uploaded successfully. Processing started.", "input_file": "%s", "output_file": "%s"}`, inputFilePath, outputFilePath)))
+}
+
+func ProcessCSV(store *store.Storage, inputFilePath, outputFilePath, uid string) {
+	file, err := os.Open(inputFilePath)
+	if err != nil {
+		log.Printf("Failed to open CSV file: %v", err)
+		return
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	rows, err := reader.ReadAll()
+	if err != nil {
+		log.Printf("Failed to read CSV file: %v", err)
+		return
+	}
+
+	outFile, err := os.Create(outputFilePath)
+	if err != nil {
+		log.Printf("Failed to create output CSV: %v", err)
+		return
+	}
+	defer outFile.Close()
+
+	writer := csv.NewWriter(outFile)
+	defer writer.Flush()
+
+	header := []string{"S.No", "Product Name", "Input Image URLs", "Output Image URLs"}
+	writer.Write(header)
+
+	for i, row := range rows[1:] {
+		if len(row) < 3 {
+			log.Printf("Skipping invalid row %d: %v", i+1, row)
+			continue
+		}
+
+		sNo := row[0]
+		productName := row[1]
+		inputImageUrls := strings.Split(row[2], ",")
+		outputImageUrls := []string{}
+
+		for _, imageUrl := range inputImageUrls {
+			imageUrl = strings.TrimSpace(imageUrl)
+			outputUrl := processAndSaveImage(imageUrl, productName, uid)
+			if outputUrl != "" {
+				outputImageUrls = append(outputImageUrls, outputUrl)
+			}
+		}
+
+		// db ..
+
+		err := store.CompressImages.ProcessImages(uid, productName, inputImageUrls, outputImageUrls)
+
+		if err != nil {
+			log.Printf("Failed to process images for %s: %v", productName, err)
+		}
+		writer.Write([]string{
+			sNo,
+			productName,
+			strings.Join(inputImageUrls, ", "),
+			strings.Join(outputImageUrls, ", "),
+		})
+	}
+
+	log.Printf("CSV processing completed. Output file: %s", outputFilePath)
+}
+
+func downloadImage(imageURL string) ([]byte, error) {
+	resp, err := http.Get(imageURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch image: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("image fetch failed with status: %d", resp.StatusCode)
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read image data: %v", err)
+	}
+
+	return data, nil
+}
+
+func processAndSaveImage(imageURL, productName, uid string) string {
+
+	fmt.Println("Processing Image:", imageURL)
+	imgData, err := downloadImage(imageURL)
+	if err != nil {
+		log.Printf("Failed to download image: %v", err)
+		return ""
+	}
+
+	img, format, err := image.Decode(bytes.NewReader(imgData))
+	if err != nil {
+		log.Printf("Failed to decode image: %s, format: %s, error: %v", imageURL, format, err)
+		return ""
+	}
+
+	imageName := filepath.Base(imageURL)
+
+	outputDir := fmt.Sprintf("imagesOut/%s/%s/", uid, productName)
+	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
+		log.Printf("Failed to create output directory: %v", err)
+		return ""
+	}
+
+	outputFile := filepath.Join(outputDir, imageName)
+	outFile, err := os.Create(outputFile)
+	if err != nil {
+		log.Printf("Failed to create output file: %v", err)
+		return ""
+	}
+	defer outFile.Close()
+
+	if format == "png" {
+		err = png.Encode(outFile, img)
+	} else if format == "jpeg" || format == "jpg" {
+		err = jpeg.Encode(outFile, img, &jpeg.Options{Quality: 50})
+	} else {
+		log.Printf("Unsupported image format: %s", format)
+		return ""
+	}
+
+	if err != nil {
+		log.Printf("Failed to save compressed image: %v", err)
+		return ""
+	}
+
+	log.Printf("Image processed and saved: %s", outputFile)
+	return outputFile
 }

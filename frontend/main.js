@@ -30,7 +30,7 @@ async function uploadFile() {
         const result = await response.json();
         showStatus(`Upload successful: ${result.message}`, 'success');
         
-        // Extract the file code from the output file path
+        
         const fileCode = result.output_file.split('/').pop().replace('_output.csv', '');
         showOutputFileCode(`File Code: ${fileCode}`, 'success');
     } catch (error) {
@@ -58,7 +58,8 @@ async function checkStatus() {
         const result = await response.json();
 
         if (response.ok) {
-            showStatusResult(`Status: ${result.status} - ${result.message}`, 'success');
+            console.log(result)
+            showStatusResult(`Status: ${result.status}`, 'success');
         } else {
             showStatusResult(`Status: Failure - ${result.message}`, 'error');
         }
