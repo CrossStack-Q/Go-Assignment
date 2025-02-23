@@ -4,6 +4,16 @@ Assignment Line .
 ## Overview
 This project is a **Golang-based image processing system** that reads image URLs from a CSV file, downloads them, compresses them to 50% quality, and saves them in an organized directory structure while maintaining the original filenames.
 
+## Deployed Link
+http://13.127.67.165/
+
+![Deployed Frontend](https://raw.githubusercontent.com/Cross-Rehk/Some_Extra_files/refs/heads/main/assignment/Screenshot%20From%202025-02-23%2022-05-59.png)
+
+## 🔗 Links
+[![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](www.linkedin.com/in/anurag-linux)
+
+
+
 ## Features
 - **CSV File Processing**: Reads product image URLs from a CSV file.
 - **Asynchronous Image Processing**: Uses Goroutines to process images concurrently.
@@ -45,6 +55,12 @@ imagesOut/
         │── t1.png
         │── t2.png
 ```
+
+## DB Table
+
+![DB Table](https://raw.githubusercontent.com/Cross-Rehk/Some_Extra_files/refs/heads/main/assignment/db.png)
+
+
 
 ## Installation & Setup
 ### Prerequisites
