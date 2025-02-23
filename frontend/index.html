@@ -4,28 +4,35 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CSV Upload</title>
-    <link rel="stylesheet" href="styles.css" />
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   </head>
-  <body>
-    <div
-      class="max-w-7xl mx-auto p-4 flex items-center justify-center"
-    >
-      <div class="border-2 p-4 rounded-md flex flex-col w-fit space-y-4">
-        <h2 class="text-2xl text-blue-400 font-bold cursor-none">CSV File Upload</h2>
+  <body class="flex items-center justify-center min-h-screen">
+    <div class="max-w-4xl w-full flex gap-8 justify-center">
+
+      <div class="border-2 border-zinc-700 p-6 w-96 rounded-lg flex flex-col space-y-4 bg-white shadow-lg">
+        <h2 class="text-2xl text-zinc-700 font-bold text-center">CSV File Upload</h2>
         <input class="hidden" type="file" id="file-input" accept=".csv" />
-        <button
-          class="border-2 px-4 py-1 border-zinc-700 cursor-pointer"
-          onclick="document.getElementById('file-input').click()"
-        >
+        <button class="px-4 py-2 rounded-md bg-zinc-600 text-white" 
+                onclick="document.getElementById('file-input').click()">
           Select CSV File
         </button>
-        <p id="selected-file"></p>
-        <button class="custom-button px-4 py-2 bg-zinc-700 text-white font-bold cursor-pointer" onclick="uploadFile()">
+        <p id="selected-file" class="text-gray-700 text-center"></p>
+        <button class="px-4 py-2 bg-blue-600 text-white font-bold rounded-md" onclick="uploadFile()">
           Upload File
         </button>
-        <div id="status"></div>
+        <div id="status" class="text-center font-medium"></div>
+        <div id="outputFile" class="text-center font-semibold text-gray-600"></div>
       </div>
+
+      <div class="border-2 p-6 w-96 rounded-lg flex flex-col space-y-4 bg-white shadow-lg">
+        <h2 class="text-2xl text-zinc-700 font-bold text-center">Check CSV Status</h2>
+        <input type="text" id="file-code" class="border-2 p-2 rounded-md w-full" placeholder="Enter File Code" />
+        <button class="px-4 py-2 bg-green-600 text-white font-bold rounded-md" onclick="checkStatus()">
+          Check Status
+        </button>
+        <div id="statusResult" class="text-center font-medium"></div>
+      </div>
+
     </div>
     <script src="main.js"></script>
   </body>

@@ -10,12 +10,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	_ "image/png"
 )
 
-func ProcessCSV(inputFilePath, outputFilePath string) {
+func ProcessCSV(inputFilePath, outputFilePath, uid string) {
 
 	file, err := os.Open(inputFilePath)
 	if err != nil {
@@ -57,7 +56,7 @@ func ProcessCSV(inputFilePath, outputFilePath string) {
 
 		for _, imageUrl := range inputImageUrls {
 			imageUrl = strings.TrimSpace(imageUrl)
-			outputUrl := processAndSaveImage(imageUrl, productName)
+			outputUrl := processAndSaveImage(imageUrl, productName, uid)
 			if outputUrl != "" {
 				outputImageUrls = append(outputImageUrls, outputUrl)
 			}
@@ -74,7 +73,7 @@ func ProcessCSV(inputFilePath, outputFilePath string) {
 	log.Printf("CSV processing completed. Output file: %s", outputFilePath)
 }
 
-func processAndSaveImage(imageURL, productName string) string {
+func processAndSaveImage(imageURL, productName, uid string) string {
 
 	resp, err := http.Get(imageURL)
 	if err != nil {
@@ -88,20 +87,20 @@ func processAndSaveImage(imageURL, productName string) string {
 		log.Printf("Failed to decode image: %s, error: %v", imageURL, err)
 		return ""
 	}
+	fmt.Println(uid)
 
-	today := time.Now().Format("2006-01-02")
-	outputDir := filepath.Join("imagesOut", today, productName)
+	outputDir := filepath.Join("imagesOut", uid, productName)
 	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
 		log.Printf("Failed to create output directory: %v", err)
 		return ""
 	}
 
 	imageID := filepath.Base(imageURL)
-	outputFilePath := filepath.Join(outputDir, imageID)
+	outputImagePath := filepath.Join(outputDir, imageID)
 
-	outFile, err := os.Create(outputFilePath)
+	outFile, err := os.Create(outputImagePath)
 	if err != nil {
-		log.Printf("Failed to create output image file: %s, error: %v", outputFilePath, err)
+		log.Printf("Failed to create output image file: %s, error: %v", outputImagePath, err)
 		return ""
 	}
 	defer outFile.Close()
@@ -110,11 +109,11 @@ func processAndSaveImage(imageURL, productName string) string {
 	opt.Quality = 50
 	err = jpeg.Encode(outFile, img, &opt)
 	if err != nil {
-		log.Printf("Failed to save compressed image: %s, error: %v", outputFilePath, err)
+		log.Printf("Failed to save compressed image: %s, error: %v", outputImagePath, err)
 		return ""
 	}
 
-	log.Printf("Image processed and saved: %s", outputFilePath)
+	log.Printf("Image processed and saved: %s", outputImagePath)
 
-	return fmt.Sprintf("http://localhost:8080/%s", outputFilePath)
+	return fmt.Sprintf("http://localhost:8080/%s", outputImagePath)
 }

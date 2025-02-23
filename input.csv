@@ -1,0 +1,6 @@
+SNo,Product Name,Input Image URLS
+1,Product 1,"http://localhost:8080/v1/images/o1.png,http://localhost:8080/v1/images/o2.png,http://localhost:8080/v1/images/o3.png"
+2,Product 2,"http://localhost:8080/v1/images/t1.png,http://localhost:8080/v1/images/t2.png,http://localhost:8080/v1/images/t3.png"
+3,Product 3,"http://localhost:8080/v1/images/th1.png,http://localhost:8080/v1/images/th2.png,http://localhost:8080/v1/images/th3.png"
+4,Product 4,"http://localhost:8080/v1/images/f1.png,http://localhost:8080/v1/images/f2.png,http://localhost:8080/v1/images/f3.png"
+5,Product 5,"http://localhost:8080/v1/images/fi1.png,http://localhost:8080/v1/images/fi2.png,http://localhost:8080/v1/images/fi3.png"
